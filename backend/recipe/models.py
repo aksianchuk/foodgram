@@ -111,6 +111,6 @@ class ShoppingCart(models.Model):
         constraints = (
             models.UniqueConstraint(
                 fields=('user', 'recipe'),
-                name='unique_shoppint_cart_user_recipe'
+                name='unique_shopping_cart_user_recipe'
             ),
         )
