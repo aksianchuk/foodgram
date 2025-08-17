@@ -7,6 +7,7 @@ User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для модели пользователя."""
+
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
