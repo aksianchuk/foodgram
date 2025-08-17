@@ -1,15 +1,21 @@
-from djoser.views import UserViewSet
+from django.contrib.auth import get_user_model
+from djoser.serializers import SetPasswordSerializer
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
 
-from api.serializers import UserSerializer
+from api.permissions import ReadOnly
+from api.serializers import AvatarSerializer, UserSerializer
 
 
-class CustomUserViewSet(UserViewSet):
+User = get_user_model()
+
+
+class UserViewSet(ModelViewSet):
+    queryset = User.objects.all()
     serializer_class = UserSerializer
-    http_method_names = ['get', 'post', 'head', 'options']
 
     @action(
         methods=['get'],
@@ -17,22 +23,49 @@ class CustomUserViewSet(UserViewSet):
         permission_classes=[IsAuthenticated]
     )
     def me(self, request):
-        return super().me(request)
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def activation(self, request):
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    @action(
+        methods=['post'],
+        detail=False,
+        serializer_class=SetPasswordSerializer,
+        permission_classes=[IsAuthenticated]
+    )
+    def set_password(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.request.user.set_password(serializer.data['new_password'])
+        self.request.user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def resend_activation(self, request):
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    @action(
+        methods=('put', 'delete'),
+        detail=False,
+        serializer_class=AvatarSerializer,
+        permission_classes=[IsAuthenticated]
+    )
+    def avatar(self, request):
+        user = request.user
+        if request.method == 'PUT':
+            serializer = self.get_serializer(instance=user, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            serializer = self.get_serializer(
+                user,
+                context={'request': request}
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        if request.method == 'DELETE':
+            if user.avatar:
+                user.avatar.delete(save=True)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def reset_password(self, request):
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    def reset_password_confirm(self, request):
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    def reset_username(self, request):
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    def reset_username_confirm(self, request):
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    def get_permissions(self):
+        if self.action == 'update':
+            return [ReadOnly()]
+        if self.action == 'partial_update':
+            return [ReadOnly()]
+        if self.action == 'destroy':
+            return [ReadOnly()]
+        return super().get_permissions()
