@@ -26,10 +26,12 @@ class CustomUser(AbstractUser):
             ),
         )
     )
+    first_name = models.CharField('Имя', max_length=150, blank=False)
+    last_name = models.CharField('Фамилия', max_length=150, blank=False)
     avatar = models.ImageField('Аватар', blank=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ('username',)
+    REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
 
     class Meta:
         verbose_name = 'Пользователь'

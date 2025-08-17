@@ -67,7 +67,7 @@ class RecipeIngredientAmount(models.Model):
 
 class Subscription(models.Model):
     subscriber = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='subscribe'
+        User, on_delete=models.CASCADE, related_name='subscriptions'
     )
     subscribing = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='subscribers'
