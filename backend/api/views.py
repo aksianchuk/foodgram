@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from api.permissions import ReadOnly
-from api.serializers import AvatarSerializer, UserSerializer
+from api.serializers import UserAvatarSerializer, UserSerializer
 
 
 User = get_user_model()
@@ -42,7 +42,7 @@ class UserViewSet(ModelViewSet):
     @action(
         methods=('put', 'delete'),
         detail=False,
-        serializer_class=AvatarSerializer,
+        serializer_class=UserAvatarSerializer,
         permission_classes=[IsAuthenticated]
     )
     def avatar(self, request):

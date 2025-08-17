@@ -7,19 +7,11 @@ from api.utils import Base64ImageField
 User = get_user_model()
 
 
-class AvatarSerializer(serializers.ModelSerializer):
-    avatar = Base64ImageField()
-
-    class Meta:
-        model = User
-        fields = ['avatar']
-
-
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для модели пользователя."""
 
     is_subscribed = serializers.SerializerMethodField()
-    avatar = AvatarSerializer()
+    avatar = serializers.ImageField(read_only=True)
 
     class Meta:
         model = User
@@ -39,3 +31,13 @@ class UserSerializer(serializers.ModelSerializer):
             request.user.is_authenticated
             and request.user.subscriptions.filter(subscribing=obj).exists()
         )
+
+
+class UserAvatarSerializer(serializers.ModelSerializer):
+    """Сериализатор для аватара пользователя."""
+
+    avatar = Base64ImageField()
+
+    class Meta:
+        model = User
+        fields = ['avatar']
