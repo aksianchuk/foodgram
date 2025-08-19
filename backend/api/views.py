@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from djoser.serializers import SetPasswordSerializer
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
@@ -65,6 +65,8 @@ class UserViewSet(ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_permissions(self):
+        if self.action == 'create':
+            return [AllowAny()]
         if self.action == 'update':
             return [ReadOnly()]
         if self.action == 'partial_update':
