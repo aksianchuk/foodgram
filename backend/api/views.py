@@ -35,26 +35,29 @@ class UserViewSet(ModelViewSet):
     def set_password(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.request.user.set_password(serializer.data['new_password'])
+        self.request.user.set_password(
+            serializer.validated_data['new_password']
+        )
         self.request.user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
-        methods=('put', 'delete'),
+        methods=['put', 'delete'],
         detail=False,
         serializer_class=UserAvatarSerializer,
-        permission_classes=[IsAuthenticated]
+        permission_classes=[IsAuthenticated],
+        url_path='me/avatar'
     )
-    def avatar(self, request):
+    def manage_avatar(self, request):
         user = request.user
         if request.method == 'PUT':
-            serializer = self.get_serializer(instance=user, data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
             serializer = self.get_serializer(
                 user,
+                data=request.data,
                 context={'request': request}
             )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         if request.method == 'DELETE':
             if user.avatar:
