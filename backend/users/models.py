@@ -2,10 +2,10 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 from users.constants import (
-    MAX_EMAIL_LENGTH,
-    MAX_FIRST_NAME_LENGTH,
-    MAX_LAST_NAME_LENGTH,
-    MAX_USERNAME_LENGTH
+    MAX_EMAIL,
+    MAX_FIRST_NAME,
+    MAX_LAST_NAME,
+    MAX_USERNAME,
 )
 
 
@@ -14,23 +14,23 @@ class CustomUser(AbstractUser):
 
     email = models.EmailField(
         'Адрес электронной почты',
-        max_length=MAX_EMAIL_LENGTH,
+        max_length=MAX_EMAIL,
         unique=True,
         blank=False
     )
     username = models.CharField(
         'Имя пользователя',
-        max_length=MAX_USERNAME_LENGTH,
+        max_length=MAX_USERNAME,
         unique=True,
     )
     first_name = models.CharField(
         'Имя',
-        max_length=MAX_FIRST_NAME_LENGTH,
+        max_length=MAX_FIRST_NAME,
         blank=False
     )
     last_name = models.CharField(
         'Фамилия',
-        max_length=MAX_LAST_NAME_LENGTH,
+        max_length=MAX_LAST_NAME,
         blank=False
     )
     avatar = models.ImageField(

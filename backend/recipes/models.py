@@ -6,6 +6,7 @@ from recipes.constants import (
     MAX_MEASUREMENT_UNIT,
     MAX_TAG_NAME,
     MAX_TAG_SLUG,
+    MAX_RECIPE_NAME
 )
 
 
@@ -63,12 +64,16 @@ class Recipe(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Автор'
     )
-    name = models.CharField('Название')
-    image = models.ImageField('Фотография')
+    name = models.CharField('Название', max_length=MAX_RECIPE_NAME)
+    image = models.ImageField(
+        'Фотография',
+        upload_to='recipes/images/',
+        blank=False
+    )
     text = models.TextField('Описание')
     ingredients = models.ManyToManyField(
         Ingredient,
-        through='RecipeIngredientAmount',
+        through='RecipeIngredient',
         verbose_name='Ингредиенты'
     )
     tags = models.ManyToManyField(Tag, verbose_name='Теги')
@@ -78,19 +83,35 @@ class Recipe(models.Model):
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
-        ordering = ('-pub_date',)
+        ordering = ['-pub_date']
 
     def __str__(self):
         return self.name
 
 
-class RecipeIngredientAmount(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    amount = models.PositiveSmallIntegerField()
+class RecipeIngredient(models.Model):
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE,
+        verbose_name='Рецепт',
+        related_name='recipe_ingredients'
+    )
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        verbose_name='Ингредиент'
+    )
+    amount = models.PositiveSmallIntegerField('Количество')
+
+    class Meta:
+        verbose_name = 'Ингредиент'
+        verbose_name_plural = 'Ингредиенты'
+        ordering = ['ingredient']
 
     def __str__(self):
-        return f'{self.recipe.name} {self.ingredient.name} {self.amount}'
+        return (
+            f'{self.ingredient.name} - {self.amount} '
+            f'{self.ingredient.measurement_unit}'
+        )
 
 
 class Subscription(models.Model):
@@ -102,43 +123,47 @@ class Subscription(models.Model):
     )
 
     class Meta:
-        constraints = (
+        constraints = [
             models.UniqueConstraint(
-                fields=('subscriber', 'subscribing'),
+                fields=['subscriber', 'subscribing'],
                 name='unique_subscriber_subscribing'
             ),
             models.CheckConstraint(
                 check=~models.Q(subscriber=models.F('subscribing')),
                 name='check_not_self_subscribe'
             )
-        )
+        ]
 
 
 class Favorite(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='favorite'
+        User,
+        on_delete=models.CASCADE,
+        related_name='favorite'
     )
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
 
     class Meta:
-        constraints = (
+        constraints = [
             models.UniqueConstraint(
-                fields=('user', 'recipe'),
+                fields=['user', 'recipe'],
                 name='unique_favorite_user_recipe'
-            ),
-        )
+            )
+        ]
 
 
 class ShoppingCart(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='shopping_cart'
+        User,
+        on_delete=models.CASCADE,
+        related_name='shopping_cart'
     )
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
 
     class Meta:
-        constraints = (
+        constraints = [
             models.UniqueConstraint(
-                fields=('user', 'recipe'),
+                fields=['user', 'recipe'],
                 name='unique_shopping_cart_user_recipe'
-            ),
-        )
+            )
+        ]

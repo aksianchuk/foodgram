@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from djoser.serializers import SetPasswordSerializer
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -10,11 +9,12 @@ from rest_framework.viewsets import ModelViewSet
 from api.permissions import ReadOnly
 from api.serializers import (
     IngredientSerializer,
+    RecipeSerializer,
     TagSerializer,
     UserAvatarSerializer,
     UserSerializer
 )
-from recipes.models import Ingredient, Tag
+from recipes.models import Ingredient, Recipe, Tag
 
 
 User = get_user_model()
@@ -95,3 +95,8 @@ class IngredientViewSet(ModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = [ReadOnly]
     pagination_class = None
+
+
+class RecipeViewSet(ModelViewSet):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
