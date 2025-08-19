@@ -1,13 +1,15 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
+from recipes.constants import MAX_TAG_NAME, MAX_TAG_SLUG
+
 
 User = get_user_model()
 
 
 class Tag(models.Model):
-    name = models.CharField('Название')
-    slug = models.SlugField('Slug', unique=True)
+    name = models.CharField('Название', max_length=MAX_TAG_NAME, unique=True)
+    slug = models.SlugField('Slug', max_length=MAX_TAG_SLUG, unique=True)
 
     class Meta:
         ordering = ('name',)

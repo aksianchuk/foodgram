@@ -2,13 +2,14 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from api.utils import Base64ImageField
+from recipes.models import Tag
 
 
 User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели пользователя."""
+    """Сериализатор для пользователя."""
 
     is_subscribed = serializers.SerializerMethodField()
     avatar = serializers.ImageField(read_only=True)
@@ -41,3 +42,11 @@ class UserAvatarSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['avatar']
+
+
+class TagSerializer(serializers.ModelSerializer):
+    """Сериализатор для тегов рецепта."""
+
+    class Meta:
+        model = Tag
+        fields = ['id', 'name', 'slug']

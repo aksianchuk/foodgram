@@ -7,7 +7,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from api.permissions import ReadOnly
-from api.serializers import UserAvatarSerializer, UserSerializer
+from api.serializers import TagSerializer, UserAvatarSerializer, UserSerializer
+from recipes.models import Tag
 
 
 User = get_user_model()
@@ -74,3 +75,9 @@ class UserViewSet(ModelViewSet):
         if self.action == 'destroy':
             return [ReadOnly()]
         return super().get_permissions()
+
+
+class TagViewSet(ModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = [ReadOnly]
