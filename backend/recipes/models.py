@@ -1,31 +1,57 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
-from recipes.constants import MAX_TAG_NAME, MAX_TAG_SLUG
+from recipes.constants import (
+    MAX_INGREDIENT_NAME,
+    MAX_MEASUREMENT_UNIT,
+    MAX_TAG_NAME,
+    MAX_TAG_SLUG,
+)
 
 
 User = get_user_model()
 
 
 class Tag(models.Model):
-    name = models.CharField('Название', max_length=MAX_TAG_NAME, unique=True)
-    slug = models.SlugField('Slug', max_length=MAX_TAG_SLUG, unique=True)
+    name = models.CharField(
+        'Название',
+        max_length=MAX_TAG_NAME,
+        unique=True,
+        blank=False
+    )
+    slug = models.SlugField(
+        'Slug',
+        max_length=MAX_TAG_SLUG,
+        unique=True,
+        blank=False
+    )
 
     class Meta:
-        ordering = ('name',)
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
+        ordering = ['id']
 
     def __str__(self):
         return self.name
 
 
 class Ingredient(models.Model):
-    name = models.CharField('Название')
-    measurement_unit = models.CharField('Единицы измерения')
+    name = models.CharField(
+        'Название',
+        max_length=MAX_INGREDIENT_NAME,
+        unique=True,
+        blank=False
+    )
+    measurement_unit = models.CharField(
+        'Единицы измерения',
+        max_length=MAX_MEASUREMENT_UNIT,
+        blank=False
+    )
 
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
-        ordering = ('name',)
+        ordering = ['id']
 
     def __str__(self):
         return f'{self.name} {self.measurement_unit}'

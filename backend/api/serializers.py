@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from api.utils import Base64ImageField
-from recipes.models import Tag
+from recipes.models import Ingredient, Tag
 
 
 User = get_user_model()
@@ -50,3 +50,11 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ['id', 'name', 'slug']
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    """"Сериализатор для ингредиентов рецепта."""
+
+    class Meta:
+        model = Ingredient
+        fields = ['id', 'name', 'measurement_unit']
