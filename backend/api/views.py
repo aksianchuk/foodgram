@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from api.permissions import ReadOnly
+from api.permissions import IsAuthor, ReadOnly
 from api.serializers import (
     IngredientSerializer,
     RecipeSerializer,
@@ -100,3 +100,10 @@ class IngredientViewSet(ModelViewSet):
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
+
+    def get_permissions(self):
+        if self.action == 'partial_update':
+            return [IsAuthor()]
+        if self.action == 'destroy':
+            return [IsAuthor()]
+        return super().get_permissions()
