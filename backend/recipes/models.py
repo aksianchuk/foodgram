@@ -91,21 +91,23 @@ class Recipe(models.Model):
 
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE,
+        Recipe,
+        on_delete=models.CASCADE,
         verbose_name='Рецепт',
         related_name='recipe_ingredients'
     )
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        verbose_name='Ингредиент'
+        verbose_name='Ингредиент',
+        related_name='ingredient_recipes'
     )
     amount = models.PositiveSmallIntegerField('Количество')
 
     class Meta:
-        verbose_name = 'Ингредиент'
-        verbose_name_plural = 'Ингредиенты'
-        ordering = ['ingredient']
+        verbose_name = 'Ингредиент рецепта'
+        verbose_name_plural = 'Ингредиенты рецепта'
+        ordering = ['recipe']
 
     def __str__(self):
         return (
