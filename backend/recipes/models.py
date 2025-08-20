@@ -118,10 +118,14 @@ class RecipeIngredient(models.Model):
 
 class Subscription(models.Model):
     subscriber = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='subscriptions'
+        User,
+        on_delete=models.CASCADE,
+        related_name='subscriptions'
     )
     subscribing = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='subscribers'
+        User,
+        on_delete=models.CASCADE,
+        related_name='subscribers'
     )
 
     class Meta:

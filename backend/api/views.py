@@ -9,7 +9,8 @@ from rest_framework.viewsets import ModelViewSet
 from api.permissions import IsAuthor, ReadOnly
 from api.serializers import (
     IngredientSerializer,
-    RecipeSerializer,
+    RecipeReadSerializer,
+    RecipeWriteSerializer,
     TagSerializer,
     UserAvatarSerializer,
     UserSerializer
@@ -99,11 +100,19 @@ class IngredientViewSet(ModelViewSet):
 
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
 
     def get_permissions(self):
+        if self.action == 'update':
+            return [ReadOnly()]
         if self.action == 'partial_update':
             return [IsAuthor()]
         if self.action == 'destroy':
             return [IsAuthor()]
         return super().get_permissions()
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return RecipeWriteSerializer
+        if self.action == 'partial_update':
+            return RecipeWriteSerializer
+        return RecipeReadSerializer
