@@ -10,12 +10,13 @@ from api.permissions import IsAuthor, ReadOnly
 from api.serializers import (
     IngredientSerializer,
     RecipeReadSerializer,
+    RecipeShortSerializer,
     RecipeWriteSerializer,
     TagSerializer,
     UserAvatarSerializer,
     UserSerializer
 )
-from recipes.models import Ingredient, Recipe, Tag
+from recipes.models import Favorite, Ingredient, Recipe, Tag
 
 
 User = get_user_model()
@@ -70,7 +71,9 @@ class UserViewSet(ModelViewSet):
         if request.method == 'DELETE':
             if user.avatar:
                 user.avatar.delete(save=True)
-            return Response(status=status.HTTP_204_NO_CONTENT)
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def get_permissions(self):
         if self.action == 'create':
@@ -101,6 +104,30 @@ class IngredientViewSet(ModelViewSet):
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
 
+    @action(
+        methods=['post', 'delete'],
+        detail=True
+    )
+    def favorite(self, request, pk=None):
+        user = request.user
+        recipe = self.get_object()
+        already_favorite = (
+            Favorite.objects.filter(user=user, recipe=recipe).exists()
+        )
+        if request.method == 'POST':
+            if already_favorite:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            Favorite.objects.create(user=user, recipe=recipe)
+            return Response(
+                self.get_serializer(recipe).data,
+                status=status.HTTP_201_CREATED
+            )
+        if request.method == 'DELETE':
+            if not already_favorite:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            Favorite.objects.filter(user=user, recipe=recipe).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
     def get_permissions(self):
         if self.action == 'update':
             return [ReadOnly()]
@@ -115,4 +142,6 @@ class RecipeViewSet(ModelViewSet):
             return RecipeWriteSerializer
         if self.action == 'partial_update':
             return RecipeWriteSerializer
+        if self.action == 'favorite':
+            return RecipeShortSerializer
         return RecipeReadSerializer
