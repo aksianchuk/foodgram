@@ -16,7 +16,7 @@ from api.serializers import (
     UserAvatarSerializer,
     UserSerializer
 )
-from recipes.models import Favorite, Ingredient, Recipe, Tag
+from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 
 
 User = get_user_model()
@@ -104,28 +104,40 @@ class IngredientViewSet(ModelViewSet):
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
 
-    @action(
-        methods=['post', 'delete'],
-        detail=True
-    )
+    @action(methods=['post', 'delete'], detail=True)
     def favorite(self, request, pk=None):
-        user = request.user
         recipe = self.get_object()
-        already_favorite = (
-            Favorite.objects.filter(user=user, recipe=recipe).exists()
+        return self._add_or_remove_recipe(
+            request=request,
+            model=Favorite,
+            recipe=recipe,
+            user=request.user,
         )
+
+    @action(methods=['post', 'delete'], detail=True)
+    def shopping_cart(self, request, pk=None):
+        recipe = self.get_object()
+        return self._add_or_remove_recipe(
+            request=request,
+            model=ShoppingCart,
+            recipe=recipe,
+            user=request.user,
+        )
+
+    def _add_or_remove_recipe(self, request, model, recipe, user):
+        exists = model.objects.filter(user=user, recipe=recipe).exists()
         if request.method == 'POST':
-            if already_favorite:
+            if exists:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            Favorite.objects.create(user=user, recipe=recipe)
+            model.objects.create(user=user, recipe=recipe)
             return Response(
                 self.get_serializer(recipe).data,
                 status=status.HTTP_201_CREATED
             )
         if request.method == 'DELETE':
-            if not already_favorite:
+            if not exists:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            Favorite.objects.filter(user=user, recipe=recipe).delete()
+            model.objects.filter(user=user, recipe=recipe).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_permissions(self):
@@ -143,5 +155,7 @@ class RecipeViewSet(ModelViewSet):
         if self.action == 'partial_update':
             return RecipeWriteSerializer
         if self.action == 'favorite':
+            return RecipeShortSerializer
+        if self.action == 'shopping_cart':
             return RecipeShortSerializer
         return RecipeReadSerializer
