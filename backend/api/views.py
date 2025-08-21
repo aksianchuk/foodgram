@@ -78,11 +78,7 @@ class UserViewSet(ModelViewSet):
     def get_permissions(self):
         if self.action == 'create':
             return [AllowAny()]
-        if self.action == 'update':
-            return [ReadOnly()]
-        if self.action == 'partial_update':
-            return [ReadOnly()]
-        if self.action == 'destroy':
+        if self.action in ['update', 'partial_update', 'destroy']:
             return [ReadOnly()]
         return super().get_permissions()
 
@@ -143,19 +139,13 @@ class RecipeViewSet(ModelViewSet):
     def get_permissions(self):
         if self.action == 'update':
             return [ReadOnly()]
-        if self.action == 'partial_update':
-            return [IsAuthor()]
-        if self.action == 'destroy':
+        if self.action in ['partial_update', 'destroy']:
             return [IsAuthor()]
         return super().get_permissions()
 
     def get_serializer_class(self):
-        if self.action == 'create':
+        if self.action in ['create', 'partial_update']:
             return RecipeWriteSerializer
-        if self.action == 'partial_update':
-            return RecipeWriteSerializer
-        if self.action == 'favorite':
-            return RecipeShortSerializer
-        if self.action == 'shopping_cart':
+        if self.action in ['favorite', 'shopping_cart']:
             return RecipeShortSerializer
         return RecipeReadSerializer
