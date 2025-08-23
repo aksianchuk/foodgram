@@ -14,6 +14,7 @@ from api.serializers import (
     RecipeWriteSerializer,
     TagSerializer,
     UserAvatarSerializer,
+    UserRegisterSerializer,
     UserSerializer
 )
 from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
@@ -24,7 +25,6 @@ User = get_user_model()
 
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
 
     @action(
         methods=['get'],
@@ -38,7 +38,6 @@ class UserViewSet(ModelViewSet):
     @action(
         methods=['post'],
         detail=False,
-        serializer_class=SetPasswordSerializer,
         permission_classes=[IsAuthenticated]
     )
     def set_password(self, request):
@@ -53,7 +52,6 @@ class UserViewSet(ModelViewSet):
     @action(
         methods=['put', 'delete'],
         detail=False,
-        serializer_class=UserAvatarSerializer,
         permission_classes=[IsAuthenticated],
         url_path='me/avatar'
     )
@@ -81,6 +79,15 @@ class UserViewSet(ModelViewSet):
         if self.action in ['update', 'partial_update', 'destroy']:
             return [ReadOnly()]
         return super().get_permissions()
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return UserRegisterSerializer
+        if self.action == 'manage_avatar':
+            return UserAvatarSerializer
+        if self.action == 'set_password':
+            return SetPasswordSerializer
+        return UserSerializer
 
 
 class TagViewSet(ModelViewSet):

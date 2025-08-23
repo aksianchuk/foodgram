@@ -8,23 +8,44 @@ from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 User = get_user_model()
 
 
-class UserSerializer(serializers.ModelSerializer):
+class BaseUserSerializer(serializers.ModelSerializer):
+    """Базовый сериализатор для пользователя."""
+
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'email',
+            'username',
+            'first_name',
+            'last_name'
+        ]
+
+
+class UserRegisterSerializer(BaseUserSerializer):
+    """Сериализатор для регистрации пользователя с паролем."""
+
+    password = serializers.CharField(write_only=True, required=True)
+
+    class Meta(BaseUserSerializer.Meta):
+        fields = BaseUserSerializer.Meta.fields + ['password']
+
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        user = User(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
+
+
+class UserSerializer(BaseUserSerializer):
     """Сериализатор для пользователя."""
 
     is_subscribed = serializers.SerializerMethodField()
     avatar = serializers.ImageField(read_only=True)
 
-    class Meta:
-        model = User
-        fields = [
-            'email',
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'is_subscribed',
-            'avatar'
-        ]
+    class Meta(BaseUserSerializer.Meta):
+        fields = BaseUserSerializer.Meta.fields + ['is_subscribed', 'avatar']
 
     def get_is_subscribed(self, obj):
         request = self.context['request']
