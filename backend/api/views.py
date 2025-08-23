@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from django.db.models import Prefetch, Count
 
 from api.permissions import IsAuthor, ReadOnly
 from api.serializers import (
@@ -15,7 +16,9 @@ from api.serializers import (
     TagSerializer,
     UserAvatarSerializer,
     UserRegisterSerializer,
-    UserSerializer
+    UserSerializer,
+    UserSubscriptionSerializer,
+    SubscribedUserWithRecipesSerializer
 )
 from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 
@@ -73,6 +76,31 @@ class UserViewSet(ModelViewSet):
             else:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
+    @action(
+        methods=['get'],
+        detail=False,
+        permission_classes=[IsAuthenticated],
+    )
+    def subscriptions(self, request):
+        subscribed_users = User.objects.filter(
+            subscribers__subscriber=request.user
+        ).prefetch_related(
+            Prefetch(
+                'recipes',
+                queryset=Recipe.objects.only(
+                    'id', 'name', 'image', 'cooking_time'
+                )
+            )
+        ).annotate(
+            recipes_count=Count('recipes')
+        ).order_by('id')
+        serializer = SubscribedUserWithRecipesSerializer(
+            self.paginate_queryset(subscribed_users),
+            many=True,
+            context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
+
     def get_permissions(self):
         if self.action == 'create':
             return [AllowAny()]
@@ -87,6 +115,8 @@ class UserViewSet(ModelViewSet):
             return UserAvatarSerializer
         if self.action == 'set_password':
             return SetPasswordSerializer
+        if self.action == 'subscriptions':
+            return UserSubscriptionSerializer
         return UserSerializer
 
 

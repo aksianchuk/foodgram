@@ -65,6 +65,13 @@ class UserAvatarSerializer(serializers.ModelSerializer):
         fields = ['avatar']
 
 
+class UserSubscriptionSerializer(UserSerializer):
+    """Сериализатор для подписок пользователя."""
+
+    class Meta(BaseUserSerializer.Meta):
+        fields = BaseUserSerializer.Meta.fields
+
+
 class TagSerializer(serializers.ModelSerializer):
     """Сериализатор для тегов рецепта."""
 
@@ -221,3 +228,20 @@ class RecipeShortSerializer(serializers.ModelSerializer):
             'image',
             'cooking_time'
         ]
+
+
+class SubscribedUserWithRecipesSerializer(serializers.ModelSerializer):
+    recipes = RecipeShortSerializer(many=True)
+    recipes_count = serializers.IntegerField()
+    is_subscribed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed', 'recipes', 'recipes_count', 'avatar']
+
+    def get_is_subscribed(self, obj):
+        request = self.context['request']
+        return (
+            request.user.is_authenticated
+            and request.user.subscriptions.filter(subscribing=obj).exists()
+        )

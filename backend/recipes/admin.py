@@ -1,6 +1,12 @@
 from django.contrib import admin
 
-from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
+from recipes.models import (
+    Ingredient, 
+    Recipe, 
+    RecipeIngredient, 
+    Subscription, 
+    Tag
+)
 
 
 @admin.register(Tag)
@@ -38,3 +44,8 @@ class RecipeAdmin(admin.ModelAdmin):
             f'({item.ingredient.measurement_unit})'
             for item in obj.recipe_ingredients.all()
         )
+
+
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ['subscriber', 'subscribing']

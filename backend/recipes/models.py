@@ -62,7 +62,8 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        verbose_name='Автор'
+        verbose_name='Автор',
+        related_name='recipes'
     )
     name = models.CharField('Название', max_length=MAX_RECIPE_NAME)
     image = models.ImageField(
@@ -120,15 +121,20 @@ class Subscription(models.Model):
     subscriber = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        verbose_name='Пользователь',
         related_name='subscriptions'
     )
     subscribing = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        verbose_name='Подписка',
         related_name='subscribers'
     )
 
     class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        ordering = ['id']
         constraints = [
             models.UniqueConstraint(
                 fields=['subscriber', 'subscribing'],
@@ -139,6 +145,9 @@ class Subscription(models.Model):
                 name='check_not_self_subscribe'
             )
         ]
+
+    def __str__(self):
+        return f'{self.subscriber} {self.subscribing}'
 
 
 class Favorite(models.Model):
