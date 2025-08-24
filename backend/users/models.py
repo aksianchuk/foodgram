@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
 from django.db import models
 
 from users.constants import (
@@ -22,6 +23,15 @@ class CustomUser(AbstractUser):
         'Имя пользователя',
         max_length=MAX_USERNAME,
         unique=True,
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+\Z',
+                message=(
+                    'Имя пользователя может содержать только латинские буквы '
+                    'цифры и символы _ . @ + -'
+                )
+            )
+        ]
     )
     first_name = models.CharField(
         'Имя',

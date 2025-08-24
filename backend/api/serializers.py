@@ -113,6 +113,11 @@ class RecipeIngredientWriteSerializer(serializers.ModelSerializer):
         model = RecipeIngredient
         fields = ['id', 'amount']
 
+    def validate_amount(self, value):
+        if value < 1:
+            raise serializers.ValidationError('Количество ингредиента должно быть минимум 1.')
+        return value
+
 
 class RecipeReadSerializer(serializers.ModelSerializer):
     """Сериализатор для чтения рецепта."""
@@ -180,6 +185,29 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             'text',
             'cooking_time'
         ]
+
+    def validate_ingredients(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                'Нужно указать хотя бы один ингредиент.'
+            )
+        ingredients_ids = [item['id'] for item in value]
+        if len(ingredients_ids) != len(set(ingredients_ids)):
+            raise serializers.ValidationError(
+                'Ингредиенты не должны повторяться.'
+            )
+        return value
+
+    def validate_tags(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                'Нужно указать хотя бы один тег.'
+            )
+        if len(value) != len(set(value)):
+            raise serializers.ValidationError(
+                'Теги не должны повторяться.'
+            )
+        return value
 
     def create(self, validated_data):
         ingredients = validated_data.pop('recipe_ingredients')
