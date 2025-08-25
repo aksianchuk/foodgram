@@ -267,7 +267,7 @@ class RecipeShortSerializer(serializers.ModelSerializer):
 
 
 class SubscribedUserWithRecipesSerializer(serializers.ModelSerializer):
-    recipes = RecipeShortSerializer(many=True)
+    recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
 
@@ -291,6 +291,16 @@ class SubscribedUserWithRecipesSerializer(serializers.ModelSerializer):
             request.user.is_authenticated
             and request.user.subscriptions.filter(subscribing=obj).exists()
         )
+
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        recipes_limit = (
+            request.query_params.get('recipes_limit') if request else None
+        )
+        recipes_qs = obj.recipes.all()
+        if recipes_limit and recipes_limit.isdigit():
+            recipes_qs = recipes_qs[:int(recipes_limit)]
+        return RecipeShortSerializer(recipes_qs, many=True).data
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()

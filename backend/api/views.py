@@ -172,7 +172,21 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    queryset = Recipe.objects.all()
+
+    def get_queryset(self):
+        queryset = Recipe.objects.all()
+        user = self.request.user
+        params = self.request.query_params
+
+        if user.is_authenticated:
+            if params.get('is_favorited') == '1':
+                queryset = queryset.filter(favorite__user=user)
+            if params.get('is_in_shopping_cart') == '1':
+                queryset = queryset.filter(shoppingcart__user=user)
+            author_id = params.get('author')
+            if author_id and author_id.isdigit():
+                queryset = queryset.filter(author__id=int(author_id))
+        return queryset
 
     @action(methods=['post', 'delete'], detail=True)
     def favorite(self, request, pk=None):
