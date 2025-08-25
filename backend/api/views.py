@@ -1,11 +1,12 @@
 from django.contrib.auth import get_user_model
 from djoser.serializers import SetPasswordSerializer
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-from django.db.models import Prefetch, Count
+from django.db.models import Prefetch
 
 from api.permissions import IsAuthor, ReadOnly
 from api.serializers import (
@@ -18,10 +19,17 @@ from api.serializers import (
     UserRegisterSerializer,
     UserSerializer,
     UserSubscriptionSerializer,
-    SubscribedUserWithRecipesSerializer
+    SubscribedUserWithRecipesSerializer,
+    SubscribeSerializer
 )
-from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
-
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    Recipe,
+    ShoppingCart,
+    Tag,
+    Subscription
+)
 
 User = get_user_model()
 
@@ -91,8 +99,6 @@ class UserViewSet(ModelViewSet):
                     'id', 'name', 'image', 'cooking_time'
                 )
             )
-        ).annotate(
-            recipes_count=Count('recipes')
         ).order_by('id')
         serializer = SubscribedUserWithRecipesSerializer(
             self.paginate_queryset(subscribed_users),
@@ -100,6 +106,39 @@ class UserViewSet(ModelViewSet):
             context={'request': request}
         )
         return self.get_paginated_response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+    )
+    def subscribe(self, request, pk=None):
+        subscribing_user = get_object_or_404(User, pk=pk)
+        if request.method == 'POST':
+            serializer = SubscribeSerializer(
+                data={'subscribing': subscribing_user.pk},
+                context={'request': request}
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            user_serializer = SubscribedUserWithRecipesSerializer(
+                subscribing_user,
+                context={'request': request}
+            )
+            return Response(
+                user_serializer.data, status=status.HTTP_201_CREATED
+            )
+        if request.method == 'DELETE':
+            subscription = Subscription.objects.filter(
+                subscriber=request.user,
+                subscribing=subscribing_user
+            )
+            if subscription.exists():
+                subscription.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {'errors': 'Вы не подписаны на этого пользователя.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     def get_permissions(self):
         if self.action == 'create':
