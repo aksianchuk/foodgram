@@ -2,12 +2,14 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q, Prefetch
 from django.shortcuts import get_object_or_404
 from djoser.serializers import SetPasswordSerializer
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
+from api.filters import IngredientFilter, RecipeFilter
 from api.permissions import IsAuthor, ReadOnly
 from api.serializers import (
     IngredientSerializer,
@@ -166,40 +168,17 @@ class TagViewSet(ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
+    queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-
-    def get_queryset(self):
-        queryset = Ingredient.objects.all()
-        name = self.request.query_params.get('name')
-        if name:
-            queryset = queryset.filter(name__istartswith=name)
-        return queryset
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = IngredientFilter
 
 
 class RecipeViewSet(ModelViewSet):
-
-    def get_queryset(self):
-        queryset = Recipe.objects.all()
-        user = self.request.user
-        params = self.request.query_params
-
-        tags = params.getlist('tags')
-        if tags:
-            q = Q()
-            for slug in tags:
-                q |= Q(tags__slug__iexact=slug)
-            queryset = queryset.filter(q)
-
-        if user.is_authenticated:
-            if params.get('is_favorited') == '1':
-                queryset = queryset.filter(favorite__user=user)
-            if params.get('is_in_shopping_cart') == '1':
-                queryset = queryset.filter(shoppingcart__user=user)
-            author_id = params.get('author')
-            if author_id and author_id.isdigit():
-                queryset = queryset.filter(author__id=author_id)
-        return queryset
+    queryset = Recipe.objects.all()
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = RecipeFilter
 
     @action(methods=['post', 'delete'], detail=True)
     def favorite(self, request, pk=None):
