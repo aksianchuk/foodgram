@@ -1,12 +1,12 @@
 from django.contrib.auth import get_user_model
-from djoser.serializers import SetPasswordSerializer
+from django.db.models import Q, Prefetch
 from django.shortcuts import get_object_or_404
+from djoser.serializers import SetPasswordSerializer
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-from django.db.models import Prefetch
 
 from api.permissions import IsAuthor, ReadOnly
 from api.serializers import (
@@ -14,21 +14,21 @@ from api.serializers import (
     RecipeReadSerializer,
     RecipeShortSerializer,
     RecipeWriteSerializer,
+    SubscribedUserWithRecipesSerializer,
+    SubscribeSerializer,
     TagSerializer,
     UserAvatarSerializer,
     UserRegisterSerializer,
     UserSerializer,
     UserSubscriptionSerializer,
-    SubscribedUserWithRecipesSerializer,
-    SubscribeSerializer
 )
 from recipes.models import (
     Favorite,
     Ingredient,
     Recipe,
     ShoppingCart,
+    Subscription,
     Tag,
-    Subscription
 )
 
 User = get_user_model()
@@ -166,9 +166,15 @@ class TagViewSet(ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
-    queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
+
+    def get_queryset(self):
+        queryset = Ingredient.objects.all()
+        name = self.request.query_params.get('name')
+        if name:
+            queryset = queryset.filter(name__istartswith=name)
+        return queryset
 
 
 class RecipeViewSet(ModelViewSet):
@@ -178,6 +184,13 @@ class RecipeViewSet(ModelViewSet):
         user = self.request.user
         params = self.request.query_params
 
+        tags = params.getlist('tags')
+        if tags:
+            q = Q()
+            for slug in tags:
+                q |= Q(tags__slug__iexact=slug)
+            queryset = queryset.filter(q)
+
         if user.is_authenticated:
             if params.get('is_favorited') == '1':
                 queryset = queryset.filter(favorite__user=user)
@@ -185,7 +198,7 @@ class RecipeViewSet(ModelViewSet):
                 queryset = queryset.filter(shoppingcart__user=user)
             author_id = params.get('author')
             if author_id and author_id.isdigit():
-                queryset = queryset.filter(author__id=int(author_id))
+                queryset = queryset.filter(author__id=author_id)
         return queryset
 
     @action(methods=['post', 'delete'], detail=True)
