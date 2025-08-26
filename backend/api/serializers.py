@@ -239,12 +239,15 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         if ingredients is not None:
             instance.recipe_ingredients.all().delete()
-            for ingredient in ingredients:
-                RecipeIngredient.objects.create(
+            ingredient_objects = [
+                RecipeIngredient(
                     recipe=instance,
                     ingredient=ingredient['id'],
-                    amount=ingredient['amount'],
+                    amount=ingredient['amount']
                 )
+                for ingredient in ingredients
+            ]
+            RecipeIngredient.objects.bulk_create(ingredient_objects)
         if tags is not None:
             instance.tags.set(tags)
         for key, value in validated_data.items():
