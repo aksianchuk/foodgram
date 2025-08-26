@@ -1,16 +1,16 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
-from djoser.serializers import SetPasswordSerializer
+from django.utils.http import int_to_base36
 from django_filters.rest_framework import DjangoFilterBackend
+from djoser.serializers import SetPasswordSerializer
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.filters import SearchFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from api.filters import RecipeFilter
+from api.filters import IngredientFilter, RecipeFilter
 from api.permissions import IsAuthor, ReadOnly
 from api.serializers import (
     IngredientSerializer,
@@ -172,8 +172,8 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-    filter_backends = [SearchFilter]
-    search_fields = ['^name']
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = IngredientFilter
 
 
 class RecipeViewSet(ModelViewSet):
@@ -199,6 +199,21 @@ class RecipeViewSet(ModelViewSet):
             model=ShoppingCart,
             recipe=recipe,
             user=request.user,
+        )
+
+    @action(
+        methods=['get'],
+        detail=True,
+        url_path='get-link'
+    )
+    def short_link(self, request, pk=None):
+        return Response(
+            {
+                'short-link':
+                f'{request.scheme}://{request.get_host()}/s/'
+                f'{int_to_base36(int(pk))}'
+            },
+            status=status.HTTP_200_OK
         )
 
     def _add_or_remove_recipe(self, request, model, recipe, user):
