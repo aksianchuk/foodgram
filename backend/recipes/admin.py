@@ -1,11 +1,11 @@
 from django.contrib import admin
 
 from recipes.models import (
-    Ingredient, 
-    Recipe, 
-    RecipeIngredient, 
-    Subscription, 
-    Tag
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    Subscription,
+    Tag,
 )
 
 

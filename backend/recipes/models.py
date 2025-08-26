@@ -5,9 +5,9 @@ from django.db import models
 from recipes.constants import (
     MAX_INGREDIENT_NAME,
     MAX_MEASUREMENT_UNIT,
+    MAX_RECIPE_NAME,
     MAX_TAG_NAME,
     MAX_TAG_SLUG,
-    MAX_RECIPE_NAME
 )
 
 
