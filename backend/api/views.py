@@ -1,15 +1,16 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from djoser.serializers import SetPasswordSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from api.filters import IngredientFilter, RecipeFilter
+from api.filters import RecipeFilter
 from api.permissions import IsAuthor, ReadOnly
 from api.serializers import (
     IngredientSerializer,
@@ -171,8 +172,8 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = IngredientFilter
+    filter_backends = [SearchFilter]
+    search_fields = ['^name']
 
 
 class RecipeViewSet(ModelViewSet):
