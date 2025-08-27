@@ -15,6 +15,12 @@ User = get_user_model()
 
 
 class Tag(models.Model):
+    """
+    Модель тега для рецептов.
+
+    Хранит название тега и slug для использования в URL.
+    """
+
     name = models.CharField(
         'Название',
         max_length=MAX_TAG_NAME,
@@ -38,6 +44,12 @@ class Tag(models.Model):
 
 
 class Ingredient(models.Model):
+    """
+    Модель ингредиента для рецептов.
+
+    Хранит название тега и единицы измерения.
+    """
+
     name = models.CharField(
         'Название',
         max_length=MAX_INGREDIENT_NAME,
@@ -60,6 +72,13 @@ class Ingredient(models.Model):
 
 
 class Recipe(models.Model):
+    """
+    Модель ингредиента для рецептов.
+
+    Хранит автора, название, фотографию, описание, ингредиенты, теги, время
+    приготовления и дату добавления.
+    """
+
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -95,6 +114,12 @@ class Recipe(models.Model):
 
 
 class RecipeIngredient(models.Model):
+    """
+    Модель для связи рецептов с ингредиентами и их количеством.
+
+    Хранит рецепт, ингредиент и количество ингредиента.
+    """
+
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -125,6 +150,12 @@ class RecipeIngredient(models.Model):
 
 
 class Subscription(models.Model):
+    """
+    Модель подписок.
+
+    Хранит пользователя и пользователя на которого он подписан.
+    """
+
     subscriber = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -158,6 +189,12 @@ class Subscription(models.Model):
 
 
 class Favorite(models.Model):
+    """
+    Модель избранного.
+
+    Хранит пользователя и рецепт на который он подписан.
+    """
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -179,6 +216,12 @@ class Favorite(models.Model):
 
 
 class ShoppingCart(models.Model):
+    """
+    Модель списка покупок.
+
+    Хранит пользователя и рецепт на который он подписан.
+    """
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

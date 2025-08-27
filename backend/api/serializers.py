@@ -156,6 +156,12 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         ]
 
     def get_is_favorited(self, obj):
+        """
+        Проверяет, добавил ли пользователь рецепт в избранное.
+
+        Возвращает:
+            bool: True, если рецепт в избранном, иначе False.
+        """
         request = self.context['request']
         return (
             request.user.is_authenticated
@@ -163,6 +169,12 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         )
 
     def get_is_in_shopping_cart(self, obj):
+        """
+        Проверяет, добавил ли пользователь рецепт в список покупок.
+
+        Возвращает:
+            bool: True, если рецепт в списке попкупок, иначе False.
+        """
         request = self.context['request']
         return (
             request.user.is_authenticated
@@ -276,6 +288,8 @@ class RecipeShortSerializer(serializers.ModelSerializer):
 
 
 class SubscribedUserWithRecipesSerializer(serializers.ModelSerializer):
+    """Сериализатор для пользователя на которого подписка."""
+
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
@@ -295,6 +309,12 @@ class SubscribedUserWithRecipesSerializer(serializers.ModelSerializer):
         ]
 
     def get_is_subscribed(self, obj):
+        """
+        Проверяет, добавил ли пользователь рецепт в избранное.
+
+        Возвращает:
+            bool: True, если рецепт в избранном, иначе False.
+        """
         request = self.context['request']
         return (
             request.user.is_authenticated
@@ -302,6 +322,16 @@ class SubscribedUserWithRecipesSerializer(serializers.ModelSerializer):
         )
 
     def get_recipes(self, obj):
+        """
+        Возвращает список рецептов.
+
+        Если в query-параметрах передан recipes_limit и он является числом,
+        возвращается только указанное количество рецептов.
+
+        Возвращает:
+            list: Список рецептов, сериализованных с помощью
+            RecipeShortSerializer.
+        """
         request = self.context.get('request')
         recipes_limit = (
             request.query_params.get('recipes_limit') if request else None
@@ -312,10 +342,18 @@ class SubscribedUserWithRecipesSerializer(serializers.ModelSerializer):
         return RecipeShortSerializer(recipes_qs, many=True).data
 
     def get_recipes_count(self, obj):
+        """
+        Возвращает количество рецептов пользователя.
+
+        Возвращает:
+            int: Количество связанных рецептов.
+        """
         return obj.recipes.count()
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
+    """Сериализатор для подписки на пользователя."""
+
     subscribing = (
         serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     )

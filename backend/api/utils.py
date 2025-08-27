@@ -5,6 +5,13 @@ from rest_framework.serializers import ImageField
 
 
 class Base64ImageField(ImageField):
+    """
+    Поле сериализатора для обработки изображений в формате Base64.
+
+    Если на вход подается строка вида 'data:image/...;base64,...',
+    поле декодирует её и преобразует в ContentFile.
+    """
+
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith('data:image'):
             format, imgstr = data.split(';base64,')

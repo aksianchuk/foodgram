@@ -15,6 +15,11 @@ DEFAULT_JSON_PATH = os.path.join(
 
 
 class Command(BaseCommand):
+    """
+    Команда, которая позволяет загрузить ингредиенты из JSON файла в базу
+    данных.
+    """
+
     def handle(self, *args, **options):
         if not os.path.exists(DEFAULT_JSON_PATH):
             self.stdout.write(

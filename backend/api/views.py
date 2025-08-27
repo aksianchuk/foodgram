@@ -34,10 +34,13 @@ from recipes.models import (
     Tag,
 )
 
+
 User = get_user_model()
 
 
 class UserViewSet(ModelViewSet):
+    """ViewSet для пользователя."""
+
     queryset = User.objects.all()
 
     @action(
@@ -46,6 +49,7 @@ class UserViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def me(self, request):
+        """Возвращает данные текущего пользователя."""
         serializer = self.get_serializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -55,6 +59,7 @@ class UserViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def set_password(self, request):
+        """Изменение пароля текущего пользователя."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.request.user.set_password(
@@ -70,6 +75,7 @@ class UserViewSet(ModelViewSet):
         url_path='me/avatar'
     )
     def manage_avatar(self, request):
+        """Изменение аватара текущего пользователя."""
         user = request.user
         if request.method == 'PUT':
             serializer = self.get_serializer(
@@ -93,6 +99,7 @@ class UserViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated],
     )
     def subscriptions(self, request):
+        """Подписки текущего пользователя."""
         subscribed_users = User.objects.filter(
             subscribers__subscriber=request.user
         ).prefetch_related(
@@ -115,6 +122,7 @@ class UserViewSet(ModelViewSet):
         methods=['post', 'delete'],
     )
     def subscribe(self, request, pk=None):
+        """Подписка на пользователя/Отписка от пользователя."""
         subscribing_user = get_object_or_404(User, pk=pk)
         if request.method == 'POST':
             serializer = SubscribeSerializer(
@@ -163,12 +171,16 @@ class UserViewSet(ModelViewSet):
 
 
 class TagViewSet(ReadOnlyModelViewSet):
+    """ViewSet для тегов рецепта."""
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
+    """ViewSet для ингредиентов рецепта."""
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
@@ -177,12 +189,15 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
+    """ViewSet для рецепта."""
+
     queryset = Recipe.objects.all()
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
 
     @action(methods=['post', 'delete'], detail=True)
     def favorite(self, request, pk=None):
+        """Добавление рецепта в избранное пользователя."""
         recipe = self.get_object()
         return self._add_or_remove_recipe(
             request=request,
@@ -193,6 +208,7 @@ class RecipeViewSet(ModelViewSet):
 
     @action(methods=['post', 'delete'], detail=True)
     def shopping_cart(self, request, pk=None):
+        """Добавление рецепта в список покупок пользователя."""
         recipe = self.get_object()
         return self._add_or_remove_recipe(
             request=request,
@@ -207,6 +223,7 @@ class RecipeViewSet(ModelViewSet):
         url_path='get-link'
     )
     def short_link(self, request, pk=None):
+        """Получение короткой ссылки на рецепт."""
         return Response(
             {
                 'short-link':
