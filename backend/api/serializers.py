@@ -225,12 +225,15 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         request = self.context['request']
         recipe = Recipe.objects.create(author=request.user, **validated_data)
-        for ingredient in ingredients:
-            RecipeIngredient.objects.create(
+        ingredient_objects = [
+            RecipeIngredient(
                 recipe=recipe,
                 ingredient=ingredient['id'],
                 amount=ingredient['amount']
             )
+            for ingredient in ingredients
+        ]
+        RecipeIngredient.objects.bulk_create(ingredient_objects)
         recipe.tags.set(tags)
         return recipe
 
