@@ -195,7 +195,10 @@ class RecipeViewSet(ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
 
-    @action(methods=['post', 'delete'], detail=True)
+    @action(
+        methods=['post', 'delete'],
+        detail=True
+    )
     def favorite(self, request, pk=None):
         """Добавление рецепта в избранное пользователя."""
         recipe = self.get_object()
@@ -206,7 +209,10 @@ class RecipeViewSet(ModelViewSet):
             user=request.user,
         )
 
-    @action(methods=['post', 'delete'], detail=True)
+    @action(
+        methods=['post', 'delete'],
+        detail=True
+    )
     def shopping_cart(self, request, pk=None):
         """Добавление рецепта в список покупок пользователя."""
         recipe = self.get_object()
