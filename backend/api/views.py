@@ -24,7 +24,6 @@ from api.serializers import (
     UserAvatarSerializer,
     UserRegisterSerializer,
     UserSerializer,
-    UserSubscriptionSerializer,
 )
 from recipes.models import (
     Favorite,
@@ -57,8 +56,7 @@ class UserViewSet(ModelViewSet):
 
     @action(
         methods=['post'],
-        detail=False,
-        permission_classes=[IsAuthenticated]
+        detail=False
     )
     def set_password(self, request):
         """Изменение пароля текущего пользователя."""
@@ -73,7 +71,6 @@ class UserViewSet(ModelViewSet):
     @action(
         methods=['put', 'delete'],
         detail=False,
-        permission_classes=[IsAuthenticated],
         url_path='me/avatar'
     )
     def manage_avatar(self, request):
@@ -105,6 +102,7 @@ class UserViewSet(ModelViewSet):
         subscribed_users = User.objects.filter(
             subscribers__subscriber=request.user
         ).prefetch_related(
+            # Получаем только конкретные значения, чтобы не нагружать БД.
             Prefetch(
                 'recipes',
                 queryset=Recipe.objects.only(
@@ -156,8 +154,6 @@ class UserViewSet(ModelViewSet):
     def get_permissions(self):
         if self.action == 'create':
             return [AllowAny()]
-        if self.action in ['update', 'partial_update', 'destroy']:
-            return [ReadOnly()]
         return super().get_permissions()
 
     def get_serializer_class(self):
@@ -167,8 +163,6 @@ class UserViewSet(ModelViewSet):
             return UserAvatarSerializer
         if self.action == 'set_password':
             return SetPasswordSerializer
-        if self.action == 'subscriptions':
-            return UserSubscriptionSerializer
         return UserSerializer
 
 
@@ -208,7 +202,7 @@ class RecipeViewSet(ModelViewSet):
             request=request,
             model=Favorite,
             recipe=recipe,
-            user=request.user,
+            user=request.user
         )
 
     @action(
@@ -222,7 +216,7 @@ class RecipeViewSet(ModelViewSet):
             request=request,
             model=ShoppingCart,
             recipe=recipe,
-            user=request.user,
+            user=request.user
         )
 
     @action(
@@ -244,10 +238,10 @@ class RecipeViewSet(ModelViewSet):
     @action(
         methods=['get'],
         detail=False,
-        permission_classes=[IsAuthenticated],
+        permission_classes=[IsAuthenticated]
     )
     def download_shopping_cart(self, request):
-        """Получение списка покупок ингредиентов."""
+        """Получение списка покупок."""
         ingredients = (
             RecipeIngredient.objects
             .filter(recipe__in_shopping_carts__user=request.user)

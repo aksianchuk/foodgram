@@ -73,7 +73,7 @@ class Ingredient(models.Model):
 
 class Recipe(models.Model):
     """
-    Модель ингредиента для рецептов.
+    Модель рецепта.
 
     Хранит автора, название, фотографию, описание, ингредиенты, теги, время
     приготовления и дату добавления.
@@ -219,6 +219,9 @@ class Favorite(models.Model):
             )
         ]
 
+    def __str__(self):
+        return f'{self.user} {self.recipe}'
+
 
 class ShoppingCart(models.Model):
     """
@@ -250,3 +253,6 @@ class ShoppingCart(models.Model):
                 name='unique_shopping_cart_user_recipe'
             )
         ]
+
+    def __str__(self):
+        return f'{self.user} {self.recipe}'

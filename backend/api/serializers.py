@@ -19,13 +19,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = [
-            'id',
-            'email',
-            'username',
-            'first_name',
-            'last_name'
-        ]
+        fields = ['id', 'email', 'username', 'first_name', 'last_name']
 
 
 class UserRegisterSerializer(BaseUserSerializer):
@@ -71,13 +65,6 @@ class UserAvatarSerializer(serializers.ModelSerializer):
         fields = ['avatar']
 
 
-class UserSubscriptionSerializer(UserSerializer):
-    """Сериализатор для подписок пользователя."""
-
-    class Meta(BaseUserSerializer.Meta):
-        fields = BaseUserSerializer.Meta.fields
-
-
 class TagSerializer(serializers.ModelSerializer):
     """Сериализатор для тегов рецепта."""
 
@@ -120,9 +107,9 @@ class RecipeIngredientWriteSerializer(serializers.ModelSerializer):
         fields = ['id', 'amount']
 
     def validate_amount(self, value):
-        if value < 1:
+        if value < 0.1:
             raise serializers.ValidationError(
-                'Количество ингредиентов должно быть не меньше 1-го.'
+                'Количество ингредиента должно быть больше нуля.'
             )
         return value
 
@@ -235,8 +222,10 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         ingredients = validated_data.pop('recipe_ingredients')
         tags = validated_data.pop('tags')
-        request = self.context['request']
-        recipe = Recipe.objects.create(author=request.user, **validated_data)
+        recipe = Recipe.objects.create(
+            author=self.context['request'].user,
+            **validated_data
+        )
         ingredient_objects = [
             RecipeIngredient(
                 recipe=recipe,
@@ -279,20 +268,14 @@ class RecipeShortSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = [
-            'id',
-            'name',
-            'image',
-            'cooking_time'
-        ]
+        fields = ['id', 'name', 'image', 'cooking_time']
 
 
-class SubscribedUserWithRecipesSerializer(serializers.ModelSerializer):
+class SubscribedUserWithRecipesSerializer(UserSerializer):
     """Сериализатор для пользователя на которого подписка."""
 
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
-    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -307,19 +290,6 @@ class SubscribedUserWithRecipesSerializer(serializers.ModelSerializer):
             'recipes_count',
             'avatar'
         ]
-
-    def get_is_subscribed(self, obj):
-        """
-        Проверяет, добавил ли пользователь рецепт в избранное.
-
-        Возвращает:
-            bool: True, если рецепт в избранном, иначе False.
-        """
-        request = self.context['request']
-        return (
-            request.user.is_authenticated
-            and request.user.subscriptions.filter(subscribing=obj).exists()
-        )
 
     def get_recipes(self, obj):
         """
@@ -336,10 +306,10 @@ class SubscribedUserWithRecipesSerializer(serializers.ModelSerializer):
         recipes_limit = (
             request.query_params.get('recipes_limit') if request else None
         )
-        recipes_qs = obj.recipes.all()
+        recipes_queryset = obj.recipes.all()
         if recipes_limit and recipes_limit.isdigit():
-            recipes_qs = recipes_qs[:int(recipes_limit)]
-        return RecipeShortSerializer(recipes_qs, many=True).data
+            recipes_queryset = recipes_queryset[:int(recipes_limit)]
+        return RecipeShortSerializer(recipes_queryset, many=True).data
 
     def get_recipes_count(self, obj):
         """
@@ -379,9 +349,8 @@ class SubscribeSerializer(serializers.ModelSerializer):
         return data
 
     def save(self):
-        subscriber = self.context['request'].user
-        subscribing = self.validated_data['subscribing']
         subscription = Subscription.objects.create(
-            subscriber=subscriber, subscribing=subscribing
+            subscriber=self.context['request'].user,
+            subscribing=self.validated_data['subscribing']
         )
         return subscription
