@@ -37,7 +37,7 @@ class Tag(models.Model):
     class Meta:
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
-        ordering = ['id']
+        ordering = ['name']
 
     def __str__(self):
         return self.name
@@ -47,7 +47,7 @@ class Ingredient(models.Model):
     """
     Модель ингредиента для рецептов.
 
-    Хранит название тега и единицы измерения.
+    Хранит название ингредиента и единицы измерения.
     """
 
     name = models.CharField(
@@ -65,7 +65,7 @@ class Ingredient(models.Model):
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
-        ordering = ['id']
+        ordering = ['name']
 
     def __str__(self):
         return f'{self.name} {self.measurement_unit}'
@@ -139,7 +139,7 @@ class RecipeIngredient(models.Model):
 
     class Meta:
         verbose_name = 'Ингредиент рецепта'
-        verbose_name_plural = 'Ингредиенты рецепта'
+        verbose_name_plural = 'Ингредиенты рецептов'
         ordering = ['recipe']
 
     def __str__(self):
@@ -172,7 +172,7 @@ class Subscription(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        ordering = ['id']
+        ordering = ['subscriber']
         constraints = [
             models.UniqueConstraint(
                 fields=['subscriber', 'subscribing'],
