@@ -192,21 +192,26 @@ class Favorite(models.Model):
     """
     Модель избранного.
 
-    Хранит пользователя и рецепт на который он подписан.
+    Хранит пользователя и рецепт, который он добавил в избранное.
     """
 
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        verbose_name='Пользователь',
         related_name='favorites'
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
+        verbose_name='Рецепт',
         related_name='favorited_by'
     )
 
     class Meta:
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранное'
+        ordering = ['user']
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
@@ -219,21 +224,26 @@ class ShoppingCart(models.Model):
     """
     Модель списка покупок.
 
-    Хранит пользователя и рецепт на который он подписан.
+    Хранит пользователя и рецепт, который он добавил в список покупок.
     """
 
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        verbose_name='Пользователь',
         related_name='shopping_cart'
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
+        verbose_name='Рецепт',
         related_name='in_shopping_carts'
     )
 
     class Meta:
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Список покупок'
+        ordering = ['user']
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],

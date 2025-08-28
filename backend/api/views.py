@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Prefetch
+from django.db.models import F, Prefetch, Sum
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.http import int_to_base36
 from django_filters.rest_framework import DjangoFilterBackend
@@ -29,6 +30,7 @@ from recipes.models import (
     Favorite,
     Ingredient,
     Recipe,
+    RecipeIngredient,
     ShoppingCart,
     Subscription,
     Tag,
@@ -237,6 +239,44 @@ class RecipeViewSet(ModelViewSet):
                 f'{int_to_base36(int(pk))}'
             },
             status=status.HTTP_200_OK
+        )
+
+    @action(
+        methods=['get'],
+        detail=False,
+        permission_classes=[IsAuthenticated],
+    )
+    def download_shopping_cart(self, request):
+        """Получение списка покупок ингредиентов."""
+        ingredients = (
+            RecipeIngredient.objects
+            .filter(recipe__in_shopping_carts__user=request.user)
+            .values(
+                name=F('ingredient__name'),
+                measurement_unit=F('ingredient__measurement_unit')
+            )
+            .annotate(amount=Sum('amount'))
+            .order_by('name')
+        )
+        if not ingredients.exists():
+            return Response(
+                {
+                    'detail': 'Список покупок пуст.'
+                },
+                status=status.HTTP_204_NO_CONTENT
+            )
+        lines = [
+            f'{i}. {ingredient['name']} - {ingredient['amount']} '
+            f'({ingredient['measurement_unit']})'
+            for i, ingredient in enumerate(ingredients, start=1)
+        ]
+        return HttpResponse(
+            content='\n'.join(lines),
+            content_type='text/plain; charset=utf-8',
+            headers={
+                'Content-Disposition':
+                'attachment; filename="shopping_cart.txt"'
+            }
         )
 
     def _add_or_remove_recipe(self, request, model, recipe, user):

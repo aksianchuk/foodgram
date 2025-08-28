@@ -1,9 +1,11 @@
 from django.contrib import admin
 
 from recipes.models import (
+    Favorite,
     Ingredient,
     Recipe,
     RecipeIngredient,
+    ShoppingCart,
     Subscription,
     Tag,
 )
@@ -49,3 +51,13 @@ class RecipeAdmin(admin.ModelAdmin):
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
     list_display = ['subscriber', 'subscribing']
+
+
+@admin.register(Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = ['user', 'recipe']
+
+
+@admin.register(ShoppingCart)
+class ShoppingCartAdmin(admin.ModelAdmin):
+    list_display = ['user', 'recipe']
