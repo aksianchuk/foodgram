@@ -1,0 +1,35 @@
+volumes:
+  pg_data_production:
+  static_production:
+  media_production:
+
+services:
+  db:
+    image: postgres:17
+    env_file: .env
+    volumes:
+      - pg_data_production:/var/lib/postgresql/data
+  backend:
+    image: aksianchuk/foodgram_backend
+    env_file: .env
+    depends_on:
+      - db
+    volumes:
+      - static_production:/backend_static
+      - media_production:/app/media
+      - ./data:/data
+  frontend:
+    image: aksianchuk/foodgram_frontend
+    volumes:
+      - static_production:/frontend_static
+    command: cp -r /app/build/. /frontend_static/
+  gateway:
+    image: aksianchuk/foodgram_gateway
+    depends_on:
+      - frontend
+    volumes:
+     - static_production:/static
+     - media_production:/media
+     - ./docs/:/usr/share/nginx/html/api/docs/
+    ports:
+      - 8000:80

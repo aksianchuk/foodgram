@@ -1,0 +1,35 @@
+volumes:
+  pg_data:
+  static:
+  media:
+
+services:
+  db:
+    image: postgres:17
+    env_file: .env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+  backend:
+    build: ./backend/
+    env_file: .env
+    depends_on:
+      - db
+    volumes:
+      - static:/backend_static
+      - media:/app/media
+      - ./data:/data
+  frontend:
+    build: ./frontend/
+    volumes:
+      - static:/frontend_static
+    command: cp -r /app/build/. /frontend_static/
+  gateway:
+    build: ./gateway/
+    depends_on:
+      - frontend
+    volumes:
+     - static:/static
+     - media:/media
+     - ./docs/:/usr/share/nginx/html/api/docs/
+    ports:
+      - 8000:80
