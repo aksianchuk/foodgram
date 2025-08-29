@@ -17,7 +17,6 @@ services:
     volumes:
       - static:/backend_static
       - media:/app/media
-      - ./data:/data
   frontend:
     build: ./frontend/
     volumes:

@@ -7,30 +7,33 @@ from django.core.management.base import BaseCommand
 from recipes.models import Ingredient
 
 
-DEFAULT_JSON_PATH = os.path.join(
-    os.path.dirname(settings.BASE_DIR),
-    'data',
-    'ingredients.json'
-)
-
-
 class Command(BaseCommand):
     """
     Команда, которая позволяет загрузить ингредиенты из JSON файла в базу
     данных.
     """
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--path',
+            type=str,
+            required=True,
+            help='Путь к файлу'
+        )
+
     def handle(self, *args, **options):
-        if not os.path.exists(DEFAULT_JSON_PATH):
+        file_path = options['path']
+        if not os.path.exists(file_path):
             self.stdout.write(
-                self.style.ERROR(f'Файл не найден: {DEFAULT_JSON_PATH}')
+                self.style.ERROR(f'Файл не найден: {file_path}')
             )
             return
+
         if Ingredient.objects.exists():
             self.stdout.write(self.style.WARNING('Ингредиенты уже загружены'))
             return
 
-        with open(DEFAULT_JSON_PATH, encoding='utf-8') as file:
+        with open(file_path, encoding='utf-8') as file:
             data = json.load(file)
         ingredients = [
             Ingredient(

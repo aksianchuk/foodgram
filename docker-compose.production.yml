@@ -17,7 +17,6 @@ services:
     volumes:
       - static_production:/backend_static
       - media_production:/app/media
-      - ./data:/data
   frontend:
     image: aksianchuk/foodgram_frontend
     volumes:
@@ -30,6 +29,5 @@ services:
     volumes:
      - static_production:/static
      - media_production:/media
-     - ./docs/:/usr/share/nginx/html/api/docs/
     ports:
       - 8000:80
