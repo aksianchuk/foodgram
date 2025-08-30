@@ -47,7 +47,9 @@ docker compose exec backend cp -r /app/collected_static/. /backend_static/static
 docker compose exec backend python manage.py load_ingredients --path data/ingredients.json
 docker-compose exec backend python manage.py createsuperuser
 ```
-Проект будет доступен по адресу: http://localhost:8000
+Проект будет доступен по адресу:  
+http://localhost:8000
+
 ### Продакшн
 ```
 git clone https://github.com/aksianchuk/foodgram.git
@@ -77,7 +79,8 @@ https://fooodgram.onthewifi.com/admin/
 https://fooodgram.onthewifi.com/api/docs/
 
 ## Документация
-Документация доступна после запуска проекта по адресу: http://localhost:8000/api/docs/
+Документация доступна после запуска проекта по адресу:   
+http://localhost:8000/api/docs/
 ## Авторы
 **Бэкенд:**  
 https://github.com/aksianchuk (Никита Оксенчук)  
