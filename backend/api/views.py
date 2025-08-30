@@ -260,8 +260,8 @@ class RecipeViewSet(ModelViewSet):
                 status=status.HTTP_204_NO_CONTENT
             )
         lines = [
-            f'{i}. {ingredient['name']} - {ingredient['amount']} '
-            f'({ingredient['measurement_unit']})'
+            f'{i}. {ingredient["name"]} - {ingredient["amount"]} '
+            f'({ingredient["measurement_unit"]})'
             for i, ingredient in enumerate(ingredients, start=1)
         ]
         return HttpResponse(
