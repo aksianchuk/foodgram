@@ -70,7 +70,7 @@ class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
-        fields = ['id', 'name', 'slug']
+        fields = '__all__'
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -78,7 +78,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ingredient
-        fields = ['id', 'name', 'measurement_unit']
+        fields = '__all__'
 
 
 class RecipeIngredientReadSerializer(serializers.ModelSerializer):
@@ -202,22 +202,17 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Нужно указать хотя бы один тег.'
             )
-        return data
-
-    def validate_ingredients(self, value):
-        ingredients_ids = [item['id'] for item in value]
+        ingredients_ids = [item['id'] for item in data['recipe_ingredients']]
         if len(ingredients_ids) != len(set(ingredients_ids)):
             raise serializers.ValidationError(
                 'Ингредиенты не должны повторяться.'
             )
-        return value
-
-    def validate_tags(self, value):
-        if len(value) != len(set(value)):
+        tags_ids = data['tags']
+        if len(tags_ids) != len(set(tags_ids)):
             raise serializers.ValidationError(
                 'Теги не должны повторяться.'
             )
-        return value
+        return data
 
     def create(self, validated_data):
         ingredients = validated_data.pop('recipe_ingredients')
@@ -226,6 +221,32 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             author=self.context['request'].user,
             **validated_data
         )
+        self._create_recipe_ingredients(recipe, ingredients)
+        recipe.tags.set(tags)
+        return recipe
+
+    def update(self, instance, validated_data):
+        ingredients = validated_data.pop('recipe_ingredients')
+        tags = validated_data.pop('tags')
+        instance = super().update(instance, validated_data)
+        instance.recipe_ingredients.all().delete()
+        self._create_recipe_ingredients(instance, ingredients)
+        instance.tags.set(tags)
+        return instance
+
+    def to_representation(self, instance):
+        return RecipeReadSerializer(instance, context=self.context).data
+
+    @staticmethod
+    def _create_recipe_ingredients(recipe, ingredients):
+        """Создает объекты RecipeIngredient и сохраняет их через bulk_create.
+
+        Параметры:
+        - recipe: рецепт, к которому будут привязаны ингредиенты
+        - ingredients: список словарей, каждый с ключами:
+            - 'id': идентификатор ингредиента
+            - 'amount': количество ингредиента
+        """
         ingredient_objects = [
             RecipeIngredient(
                 recipe=recipe,
@@ -235,32 +256,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             for ingredient in ingredients
         ]
         RecipeIngredient.objects.bulk_create(ingredient_objects)
-        recipe.tags.set(tags)
-        return recipe
-
-    def update(self, instance, validated_data):
-        ingredients = validated_data.pop('recipe_ingredients')
-        tags = validated_data.pop('tags')
-        if ingredients is not None:
-            instance.recipe_ingredients.all().delete()
-            ingredient_objects = [
-                RecipeIngredient(
-                    recipe=instance,
-                    ingredient=ingredient['id'],
-                    amount=ingredient['amount']
-                )
-                for ingredient in ingredients
-            ]
-            RecipeIngredient.objects.bulk_create(ingredient_objects)
-        if tags is not None:
-            instance.tags.set(tags)
-        for key, value in validated_data.items():
-            setattr(instance, key, value)
-        instance.save()
-        return instance
-
-    def to_representation(self, instance):
-        return RecipeReadSerializer(instance, context=self.context).data
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
