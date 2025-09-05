@@ -270,7 +270,7 @@ class SubscribedUserWithRecipesSerializer(UserSerializer):
     """Сериализатор для пользователя на которого подписка."""
 
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
+    recipes_count = serializers.IntegerField()
 
     class Meta:
         model = User
@@ -305,15 +305,6 @@ class SubscribedUserWithRecipesSerializer(UserSerializer):
         if recipes_limit and recipes_limit.isdigit():
             recipes_queryset = recipes_queryset[:int(recipes_limit)]
         return RecipeShortSerializer(recipes_queryset, many=True).data
-
-    def get_recipes_count(self, obj):
-        """
-        Возвращает количество рецептов пользователя.
-
-        Возвращает:
-            int: Количество связанных рецептов.
-        """
-        return obj.recipes.count()
 
 
 class SubscribeSerializer(serializers.ModelSerializer):

@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.db.models import F, Prefetch, Sum
+from django.db.models import Count, F, Prefetch, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.http import int_to_base36
@@ -107,7 +107,7 @@ class UserViewSet(ModelViewSet):
                     'id', 'name', 'image', 'cooking_time'
                 )
             )
-        ).order_by('id')
+        ).annotate(recipes_count=Count('recipes')).order_by('id')
         serializer = SubscribedUserWithRecipesSerializer(
             self.paginate_queryset(subscribed_users),
             many=True,
@@ -121,7 +121,10 @@ class UserViewSet(ModelViewSet):
     )
     def subscribe(self, request, pk=None):
         """Подписка на пользователя/Отписка от пользователя."""
-        subscribing_user = get_object_or_404(User, pk=pk)
+        subscribing_user = get_object_or_404(
+            User.objects.annotate(recipes_count=Count('recipes')),
+            pk=pk
+        )
         if request.method == 'POST':
             serializer = SubscribeSerializer(
                 data={'subscribing': subscribing_user.pk},
