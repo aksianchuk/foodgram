@@ -139,18 +139,17 @@ class UserViewSet(ModelViewSet):
             return Response(
                 user_serializer.data, status=status.HTTP_201_CREATED
             )
-        if request.method == 'DELETE':
-            subscription = Subscription.objects.filter(
-                subscriber=request.user,
-                subscribing=subscribing_user
-            )
-            if subscription.exists():
-                subscription.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response(
-                {'errors': 'Вы не подписаны на этого пользователя.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        subscription = Subscription.objects.filter(
+            subscriber=request.user,
+            subscribing=subscribing_user
+        )
+        if subscription.exists():
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {'errors': 'Вы не подписаны на этого пользователя.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     def get_permissions(self):
         if self.action == 'create':
@@ -284,11 +283,10 @@ class RecipeViewSet(ModelViewSet):
                 self.get_serializer(recipe).data,
                 status=status.HTTP_201_CREATED
             )
-        if request.method == 'DELETE':
-            if not exists:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            model.objects.filter(user=user, recipe=recipe).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        if not exists:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        model.objects.filter(user=user, recipe=recipe).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_permissions(self):
         if self.action == 'update':
