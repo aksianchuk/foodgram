@@ -66,6 +66,16 @@ class Ingredient(models.Model):
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
         ordering = ['name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name='unique_name_measurement_unit',
+                violation_error_message=(
+                    'Ингредиент с таким названием и единицей измерения уже '
+                    'существует.'
+                )
+            )
+        ]
 
     def __str__(self):
         return f'{self.name} {self.measurement_unit}'
@@ -82,8 +92,7 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        verbose_name='Автор',
-        related_name='recipes'
+        verbose_name='Автор'
     )
     name = models.CharField('Название', max_length=MAX_RECIPE_NAME)
     image = models.ImageField(
@@ -108,6 +117,7 @@ class Recipe(models.Model):
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ['-pub_date']
+        default_related_name = 'recipes'
 
     def __str__(self):
         return self.name
@@ -141,6 +151,15 @@ class RecipeIngredient(models.Model):
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецептов'
         ordering = ['recipe']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique_recipe_ingredient',
+                violation_error_message=(
+                    'Этот ингредиент уже добавлен к рецепту.'
+                )
+            )
+        ]
 
     def __str__(self):
         return (
@@ -176,7 +195,11 @@ class Subscription(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['subscriber', 'subscribing'],
-                name='unique_subscriber_subscribing'
+                name='unique_subscriber_subscribing',
+                violation_error_message=(
+                    'Нельзя подписаться на одного и того же пользователя '
+                    'дважды.'
+                )
             ),
             models.CheckConstraint(
                 check=~models.Q(subscriber=models.F('subscribing')),
@@ -215,7 +238,10 @@ class Favorite(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
-                name='unique_favorite_user_recipe'
+                name='unique_favorite_user_recipe',
+                violation_error_message=(
+                    'Этот рецепт уже добавлен в избранное.'
+                ),
             )
         ]
 
@@ -250,7 +276,10 @@ class ShoppingCart(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
-                name='unique_shopping_cart_user_recipe'
+                name='unique_shopping_cart_user_recipe',
+                violation_error_message=(
+                    'Этот рецепт уже добавлен в список покупок.'
+                ),
             )
         ]
 
