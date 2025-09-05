@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 
 from users.constants import (
@@ -10,7 +10,7 @@ from users.constants import (
 )
 
 
-class CustomUser(AbstractUser):
+class User(AbstractUser):
     """
     Кастомная модель пользователя.
 
@@ -27,15 +27,7 @@ class CustomUser(AbstractUser):
         'Имя пользователя',
         max_length=MAX_USERNAME,
         unique=True,
-        validators=[
-            RegexValidator(
-                regex=r'^[\w.@+-]+\Z',
-                message=(
-                    'Имя пользователя может содержать только латинские буквы '
-                    'цифры и символы _ . @ + -'
-                )
-            )
-        ]
+        validators=[UnicodeUsernameValidator()]
     )
     first_name = models.CharField(
         'Имя',
@@ -50,8 +42,7 @@ class CustomUser(AbstractUser):
     avatar = models.ImageField(
         'Аватар',
         upload_to='users/',
-        null=True,
-        default=None
+        null=True
     )
 
     USERNAME_FIELD = 'email'
