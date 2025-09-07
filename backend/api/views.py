@@ -93,7 +93,7 @@ class UserViewSet(ModelViewSet):
     @action(
         methods=['get'],
         detail=False,
-        permission_classes=[IsAuthenticated],
+        permission_classes=[IsAuthenticated]
     )
     def subscriptions(self, request):
         """Подписки текущего пользователя."""
@@ -117,38 +117,47 @@ class UserViewSet(ModelViewSet):
 
     @action(
         detail=True,
-        methods=['post', 'delete'],
+        methods=['post']
     )
     def subscribe(self, request, pk=None):
         """Подписка на пользователя/Отписка от пользователя."""
-        subscribing_user = get_object_or_404(
-            User.objects.annotate(recipes_count=Count('recipes')),
-            pk=pk
+        subscribing_user = self._get_subscribing_user(pk)
+        serializer = SubscribeSerializer(
+            data={'subscribing': subscribing_user.pk},
+            context={'request': request}
         )
-        if request.method == 'POST':
-            serializer = SubscribeSerializer(
-                data={'subscribing': subscribing_user.pk},
-                context={'request': request}
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            user_serializer = SubscribedUserWithRecipesSerializer(
-                subscribing_user,
-                context={'request': request}
-            )
-            return Response(
-                user_serializer.data, status=status.HTTP_201_CREATED
-            )
-        subscription = Subscription.objects.filter(
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        user_serializer = SubscribedUserWithRecipesSerializer(
+            subscribing_user,
+            context={'request': request}
+        )
+        return Response(
+            user_serializer.data, status=status.HTTP_201_CREATED
+        )
+
+    @subscribe.mapping.delete
+    def unsubscribe(self, request, pk=None):
+        subscribing_user = self._get_subscribing_user(pk)
+        deleted_subscription_count, _ = Subscription.objects.filter(
             subscriber=request.user,
             subscribing=subscribing_user
-        )
-        if subscription.exists():
-            subscription.delete()
+        ).delete()
+        if deleted_subscription_count:
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(
             {'errors': 'Вы не подписаны на этого пользователя.'},
             status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def _get_subscribing_user(self, pk):
+        """
+        Возвращает пользователя для подписки(отписки) с аннотацией количества
+        рецептов.
+        """
+        return get_object_or_404(
+            User.objects.annotate(recipes_count=Count('recipes')),
+            pk=pk
         )
 
     def get_permissions(self):
@@ -274,6 +283,7 @@ class RecipeViewSet(ModelViewSet):
         )
 
     def _add_or_remove_recipe(self, request, model, recipe, user):
+        """Добавляет или удаляет рецепт для пользователя в указанной модели."""
         exists = model.objects.filter(user=user, recipe=recipe).exists()
         if request.method == 'POST':
             if exists:
