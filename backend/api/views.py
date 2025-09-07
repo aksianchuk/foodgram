@@ -244,7 +244,7 @@ class RecipeViewSet(ModelViewSet):
         """Получение списка покупок."""
         ingredients = (
             RecipeIngredient.objects
-            .filter(recipe__in_shopping_carts__user=request.user)
+            .filter(recipe__shopping_cart__user=request.user)
             .values(
                 name=F('ingredient__name'),
                 measurement_unit=F('ingredient__measurement_unit')

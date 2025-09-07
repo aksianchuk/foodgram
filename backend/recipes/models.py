@@ -14,6 +14,32 @@ from recipes.constants import (
 User = get_user_model()
 
 
+class UserRecipeBase(models.Model):
+    """
+    Абстрактная для связи пользователя с рецептом.
+
+    Хранит пользователя и рецепт.
+    """
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь'
+    )
+    recipe = models.ForeignKey(
+        'Recipe',
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт'
+    )
+
+    class Meta:
+        abstract = True
+        ordering = ['user']
+
+    def __str__(self):
+        return f'{self.user} {self.recipe}'
+
+
 class Tag(models.Model):
     """
     Модель тега для рецептов.
@@ -114,10 +140,10 @@ class Recipe(models.Model):
     pub_date = models.DateTimeField('Добавлен', auto_now_add=True)
 
     class Meta:
+        default_related_name = 'recipes'
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ['-pub_date']
-        default_related_name = 'recipes'
 
     def __str__(self):
         return self.name
@@ -197,8 +223,7 @@ class Subscription(models.Model):
                 fields=['subscriber', 'subscribing'],
                 name='unique_subscriber_subscribing',
                 violation_error_message=(
-                    'Нельзя подписаться на одного и того же пользователя '
-                    'дважды.'
+                    'Вы уже подписаны на этого пользователя.'
                 )
             ),
             models.CheckConstraint(
@@ -211,77 +236,41 @@ class Subscription(models.Model):
         return f'{self.subscriber} {self.subscribing}'
 
 
-class Favorite(models.Model):
+class Favorite(UserRecipeBase):
     """
     Модель избранного.
-
-    Хранит пользователя и рецепт, который он добавил в избранное.
     """
 
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='Пользователь',
-        related_name='favorites'
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        verbose_name='Рецепт',
-        related_name='favorited_by'
-    )
-
-    class Meta:
+    class Meta(UserRecipeBase.Meta):
+        default_related_name = 'favorites'
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранные'
-        ordering = ['user']
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
                 name='unique_favorite_user_recipe',
                 violation_error_message=(
                     'Этот рецепт уже добавлен в избранное.'
-                ),
+                )
             )
         ]
 
-    def __str__(self):
-        return f'{self.user} {self.recipe}'
 
-
-class ShoppingCart(models.Model):
+class ShoppingCart(UserRecipeBase):
     """
     Модель списка покупок.
-
-    Хранит пользователя и рецепт, который он добавил в список покупок.
     """
 
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='Пользователь',
-        related_name='shopping_cart'
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        verbose_name='Рецепт',
-        related_name='in_shopping_carts'
-    )
-
-    class Meta:
+    class Meta(UserRecipeBase.Meta):
+        default_related_name = 'shopping_cart'
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
-        ordering = ['user']
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
                 name='unique_shopping_cart_user_recipe',
                 violation_error_message=(
                     'Этот рецепт уже добавлен в список покупок.'
-                ),
+                )
             )
         ]
-
-    def __str__(self):
-        return f'{self.user} {self.recipe}'
