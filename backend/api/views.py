@@ -14,10 +14,11 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from api.filters import IngredientFilter, RecipeFilter
 from api.permissions import IsAuthor, ReadOnly
 from api.serializers import (
+    FavoriteSerializer,
     IngredientSerializer,
     RecipeReadSerializer,
-    RecipeShortSerializer,
     RecipeWriteSerializer,
+    ShoppingCartSerializer,
     SubscribedUserWithRecipesSerializer,
     SubscribeSerializer,
     TagSerializer,
@@ -145,10 +146,7 @@ class UserViewSet(ModelViewSet):
         ).delete()
         if deleted_subscription_count:
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'errors': 'Вы не подписаны на этого пользователя.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def _get_subscribing_user(self, pk):
         """
@@ -284,19 +282,24 @@ class RecipeViewSet(ModelViewSet):
 
     def _add_or_remove_recipe(self, request, model, recipe, user):
         """Добавляет или удаляет рецепт для пользователя в указанной модели."""
-        exists = model.objects.filter(user=user, recipe=recipe).exists()
         if request.method == 'POST':
-            if exists:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            model.objects.create(user=user, recipe=recipe)
+            serializer = self.get_serializer(
+                data={'user': user.id, 'recipe': recipe.id},
+                context={'request': request}
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
             return Response(
                 self.get_serializer(recipe).data,
                 status=status.HTTP_201_CREATED
             )
-        if not exists:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        model.objects.filter(user=user, recipe=recipe).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        deleted_recipe_count, _ = model.objects.filter(
+            user=user,
+            recipe=recipe
+        ).delete()
+        if deleted_recipe_count:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def get_permissions(self):
         if self.action == 'update':
@@ -308,6 +311,8 @@ class RecipeViewSet(ModelViewSet):
     def get_serializer_class(self):
         if self.action in ['create', 'partial_update']:
             return RecipeWriteSerializer
-        if self.action in ['favorite', 'shopping_cart']:
-            return RecipeShortSerializer
+        if self.action in ['favorite']:
+            return FavoriteSerializer
+        if self.action in ['shopping_cart']:
+            return ShoppingCartSerializer
         return RecipeReadSerializer

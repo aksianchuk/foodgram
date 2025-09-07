@@ -3,9 +3,11 @@ from rest_framework import serializers
 
 from api.utils import Base64ImageField
 from recipes.models import (
+    Favorite,
     Ingredient,
     Recipe,
     RecipeIngredient,
+    ShoppingCart,
     Subscription,
     Tag,
 )
@@ -340,3 +342,47 @@ class SubscribeSerializer(serializers.ModelSerializer):
             subscribing=self.validated_data['subscribing']
         )
         return subscription
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    """Сериализатор для добавления рецепта в избранное."""
+
+    class Meta:
+        model = Favorite
+        fields = ['user', 'recipe']
+
+    def validate(self, attrs):
+        user_id = attrs.get('user')
+        recipe_id = attrs.get('recipe')
+
+        if Favorite.objects.filter(
+            user=user_id,
+            recipe=recipe_id
+        ).exists():
+            raise serializers.ValidationError('Рецепт уже добавлен.')
+        return attrs
+
+    def to_representation(self, instance):
+        return RecipeShortSerializer(instance, context=self.context).data
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    """Сериализатор для добавления рецепта в список покупок."""
+
+    class Meta:
+        model = ShoppingCart
+        fields = ['user', 'recipe']
+
+    def validate(self, attrs):
+        user_id = attrs.get('user')
+        recipe_id = attrs.get('recipe')
+
+        if ShoppingCart.objects.filter(
+            user=user_id,
+            recipe=recipe_id
+        ).exists():
+            raise serializers.ValidationError('Рецепт уже добавлен.')
+        return attrs
+
+    def to_representation(self, instance):
+        return RecipeShortSerializer(instance, context=self.context).data
