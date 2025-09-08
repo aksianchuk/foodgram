@@ -69,11 +69,11 @@ sudo docker compose -f docker-compose.production.yml exec backend python manage.
 https://fooodgram.onthewifi.com  
 
 https://fooodgram.onthewifi.com/admin/  
-Пользователь: admin  
+Пользователь: admin@mail.com  
 Пароль: 12345678!  
-Пользователь: second  
+Пользователь: second@mail.com  
 Пароль: 12345678!  
-Пользователь: third  
+Пользователь: third@mail.com  
 Пароль: 12345678!  
 
 https://fooodgram.onthewifi.com/api/docs/
