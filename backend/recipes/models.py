@@ -35,6 +35,15 @@ class UserRecipeBase(models.Model):
     class Meta:
         abstract = True
         ordering = ['user']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_%(class)s_user_recipe',
+                violation_error_message=(
+                    'Этот рецепт уже добавлен.'
+                )
+            )
+        ]
 
     def __str__(self):
         return f'{self.user} {self.recipe}'
@@ -124,7 +133,6 @@ class Recipe(models.Model):
     image = models.ImageField(
         'Фотография',
         upload_to='recipes/images/',
-        blank=False
     )
     text = models.TextField('Описание')
     ingredients = models.ManyToManyField(
@@ -245,15 +253,6 @@ class Favorite(UserRecipeBase):
         default_related_name = 'favorites'
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранные'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'recipe'],
-                name='unique_favorite_user_recipe',
-                violation_error_message=(
-                    'Этот рецепт уже добавлен в избранное.'
-                )
-            )
-        ]
 
 
 class ShoppingCart(UserRecipeBase):
@@ -265,12 +264,3 @@ class ShoppingCart(UserRecipeBase):
         default_related_name = 'shopping_cart'
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'recipe'],
-                name='unique_shopping_cart_user_recipe',
-                violation_error_message=(
-                    'Этот рецепт уже добавлен в список покупок.'
-                )
-            )
-        ]
