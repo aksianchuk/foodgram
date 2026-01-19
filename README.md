@@ -1,7 +1,7 @@
 
 # Foodgram
 
-**Foodgram** - REST API для платформы любителей кулинарии.  
+**Foodgram** - REST API на Django REST Framework для платформы любителей кулинарии.  
 
 ![Главная страница платформы Foodgram](screenshot.png)
 
