@@ -1,3 +1,8 @@
 # Игнорируем фронтенд-папки
 frontend/public/* linguist-vendored
 frontend/src/* linguist-vendored
+
+# Игнорируем файлы менеджеров пакетов
+frontend/package.json linguist-vendored
+frontend/package-lock.json linguist-vendored
+frontend/yarn.lock linguist-vendored
